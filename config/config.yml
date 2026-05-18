@@ -1,0 +1,59 @@
+reasoning_strategies:
+  CoT: |
+    Use this systematic approach to provide your response:
+    1. Break down the problem into smaller steps
+    2. Address each step systematically
+    3. Show your reasoning for each step
+    4. Then provide your final conclusion
+
+  ReAct: |
+    Use this systematic approach to provide your response:
+    1. Thought: What approaches could I take to solve this?
+    2. Action: Choose and implement the best approach
+    3. Observation: What happened? What did I learn?
+    4. Reflection: Do I have enough information to provide my final answer,
+       or should I try a different approach?
+
+    (Repeat steps 1-4 as needed)
+
+    Then provide your final answer.
+
+  Self-Ask: |
+    Use this systematic approach to provide your response:
+    1. Break the main question into smaller sub-questions.
+    2. Answer each sub-question thoroughly.
+    3. Then, based on those answers, synthesize a clear and thoughtful final response.
+
+  # Tailored to retrieval-augmented generation: forces the model to anchor
+  # every claim to a specific chunk before it speaks, and to refuse cleanly
+  # when the retrieved context does not support an answer.
+  Grounded: |
+    Use this grounded approach to answer:
+    1. Scan each chunk in the research context and identify which chunk(s)
+       contain information that is directly relevant to the question.
+    2. For each relevant chunk, extract the specific phrase or sentence that
+       supports an answer. If no chunk contains relevant information, reply
+       with the exact refusal sentence from the output constraints and stop.
+    3. Write the answer in your own words, anchored to those extracted
+       phrases. Quote the phrases verbatim (in double quotes) where they
+       carry the weight of a factual claim.
+    4. Before finalizing, re-read your answer and remove any sentence that
+       is not directly supported by a phrase you extracted in step 2.
+
+
+# Conversation memory policy. The assistant keeps the most recent
+# `buffer_size` turns verbatim and folds anything older into a running
+# summary via an LLM-driven summarizer (see summarizer_prompt_cfg in
+# prompt_config.yml).
+#
+# strategy:
+#   summary_buffer - last N turns verbatim + summary of older turns (default)
+#   buffer         - just the last N turns, no summarization
+#   none           - stateless; no history fed to the LLM
+#
+# buffer_size: number of recent USER+ASSISTANT pairs kept verbatim.
+#   Setting buffer_size: 0 with strategy: summary_buffer effectively
+#   degrades to "refine" mode (every turn folded into summary immediately).
+memory:
+  strategy: summary_buffer
+  buffer_size: 4
