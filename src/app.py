@@ -21,6 +21,7 @@ from langchain_core.messages import HumanMessage
 
 from ragassistant import RAGAssistant
 from utils import load_documents
+from vectordb import DEFAULT_CORPUS
 
 
 # ----------------------------------------------------------------------
@@ -117,15 +118,10 @@ def print_help() -> None:
 
 
 def list_topics(assistant: RAGAssistant) -> None:
-    """Pull unique source filenames from the collection's metadata."""
+    """Pull unique source filenames from the default corpus's metadata."""
     try:
-        raw = assistant.vector_db.collection.get(include=["metadatas"])
-        metadatas = raw.get("metadatas", []) or []
-        sources = sorted({
-            Path(m["source"]).stem
-            for m in metadatas
-            if m and "source" in m
-        })
+        raw_sources = assistant.vector_db.list_sources(DEFAULT_CORPUS)
+        sources = sorted({Path(s).stem for s in raw_sources})
         if not sources:
             system_msg("No documents indexed yet.")
             return
@@ -256,13 +252,13 @@ def main() -> None:
         system_msg("Initializing…")
         assistant = RAGAssistant()
 
-        existing = assistant.vector_db.collection.count()
+        existing = assistant.vector_db.count(DEFAULT_CORPUS)
         if existing == 0:
             system_msg("Loading documents from ./data …")
             docs = load_documents()
-            assistant.add_documents(docs)
+            assistant.add_documents(docs, corpus_id=DEFAULT_CORPUS)
             system_msg(
-                f"Indexed {assistant.vector_db.collection.count()} chunks "
+                f"Indexed {assistant.vector_db.count(DEFAULT_CORPUS)} chunks "
                 f"from {len(docs)} document(s)."
             )
         else:
